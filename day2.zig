@@ -1,3 +1,6 @@
+// DISCLAIMER: THIS NEEDS OPTIMIZED, BADLY
+// TODO: EXAMINE ALGORITHM BEING USED AND FIND O(n)
+
 const std = @import("std");
 const testing = std.testing;
 const data = @embedFile("day2.txt");
@@ -34,7 +37,7 @@ pub fn main() !void {
                 }
             } else {
                 const str = try std.fmt.bufPrint(&buf, "{d}", .{num});
-                const valid = is_id_valid(str);
+                const valid = validate_part_2(str);
                 if (!valid) {
                     std.debug.print("Found invalid number: {d}\n", .{num});
                     sum += num;
@@ -60,6 +63,20 @@ fn get_ranges(range_str: []const u8) !Range {
     };
 }
 
+fn validate_part_2(id: []const u8) bool {
+    if (id.len < 2) return true;
+    // 222
+
+    for (2..id.len + 1) |num_slices| {
+        // for 2..4
+        // 2 -> true because 3 % 2 != 0
+        // 3 -> false because 2 2 2
+        const is_valid = is_id_valid_mp(id, num_slices);
+        if (!is_valid) return false;
+    }
+    return true;
+}
+
 fn is_id_valid(id: []const u8) bool {
     // check if id is made of ONLY two sequences of digits, repeated twice.
     // use length, get the first n / 2 and then the second n / 2
@@ -74,11 +91,34 @@ fn is_id_valid(id: []const u8) bool {
     return !std.mem.eql(u8, first_sequence, second_sequence);
 }
 
-fn is_id_valid_mp(id: []const u8, mp: usize) bool {
-    if (@mod(id.len, mp) != 0) return true;
-    var cutoff: usize = mp;
+// Checks if the id is valid with the given number of slices, mp
+fn is_id_valid_mp(id: []const u8, num_slices: usize) bool {
+    // if len isn't divisible by the number of slices, it is valid.
+    if (@mod(id.len, num_slices) != 0 or num_slices < 2) return true;
 
-    while (cutoff <= id.len) : (cutoff += mp) {}
+    // we want to progress through the string, with slices of id.len / num_slices length.
+    // verify that each string is the same. If it is not, return true.
+    const slice_len: usize = id.len / num_slices;
+    var index: usize = 0;
+    var sequence: []const u8 = "";
+
+    std.debug.print("slice_len: {d}\n", .{slice_len});
+
+    while (index < id.len) : (index += slice_len) {
+        // go from index to index+slice_len and check if that sequence
+        // of chars is the same. If undefined, that means the sequence hasn't been set yet.
+        const next = id[index .. index + slice_len];
+        std.debug.print("sequence: {s}\tnext: {s}\t index: {d}\n", .{ sequence, next, index });
+        if (!std.mem.eql(u8, "", sequence)) {
+            if (!std.mem.eql(u8, sequence, next)) {
+                std.debug.print("Found sequence that doesn't match, returning true.\n", .{});
+                return true;
+            }
+        } else {
+            sequence = next;
+        }
+    }
+    return false;
 }
 
 test "get_ranges" {
@@ -138,11 +178,13 @@ test "is_id_valid" {
 }
 
 test "is_id_valid_mp" {
-    try testing.expectEqual(true, is_id_valid_mp("15"));
-    try testing.expectEqual(false, is_id_valid_mp("11"));
-    try testing.expectEqual(false, is_id_valid_mp("22"));
-    try testing.expectEqual(false, is_id_valid_mp("5656"));
-    try testing.expectEqual(false, is_id_valid_mp("565656"));
-    try testing.expectEqual(false, is_id_valid_mp("56565656"));
-    try testing.expectEqual(false, is_id_valid_mp("1111111"));
+    try testing.expectEqual(true, is_id_valid_mp("15", 2));
+    try testing.expectEqual(false, is_id_valid_mp("11", 2));
+    try testing.expectEqual(false, is_id_valid_mp("22", 2));
+    try testing.expectEqual(false, is_id_valid_mp("5656", 2));
+    try testing.expectEqual(false, is_id_valid_mp("565656", 3));
+    try testing.expectEqual(false, is_id_valid_mp("56565656", 2));
+    try testing.expectEqual(false, is_id_valid_mp("56565656", 4));
+    try testing.expectEqual(false, is_id_valid_mp("1111111", 7));
+    try testing.expectEqual(false, is_id_valid_mp("333", 3));
 }
