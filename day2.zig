@@ -1,6 +1,3 @@
-// DISCLAIMER: THIS NEEDS OPTIMIZED, BADLY
-// TODO: EXAMINE ALGORITHM BEING USED AND FIND O(n)
-
 const std = @import("std");
 const testing = std.testing;
 const data = @embedFile("day2.txt");
@@ -13,7 +10,6 @@ const Range = struct {
 pub fn main() !void {
     var sum: u64 = 0;
 
-    // initialize the allocator
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
 
@@ -65,23 +61,18 @@ fn get_ranges(range_str: []const u8) !Range {
 
 fn validate_part_2(id: []const u8) bool {
     if (id.len < 2) return true;
-    // 222
 
     for (2..id.len + 1) |num_slices| {
-        // for 2..4
-        // 2 -> true because 3 % 2 != 0
-        // 3 -> false because 2 2 2
-        const is_valid = is_id_valid_mp(id, num_slices);
+        var is_valid = true;
+        if (@mod(id.len, num_slices) == 0) {
+            is_valid = is_id_valid_mp(id, num_slices);
+        }
         if (!is_valid) return false;
     }
     return true;
 }
 
 fn is_id_valid(id: []const u8) bool {
-    // check if id is made of ONLY two sequences of digits, repeated twice.
-    // use length, get the first n / 2 and then the second n / 2
-
-    // odd-lengthed id's will always be valid.
     if (@mod(id.len, 2) != 0) return true;
 
     const midpoint = id.len / 2;
@@ -102,16 +93,12 @@ fn is_id_valid_mp(id: []const u8, num_slices: usize) bool {
     var index: usize = 0;
     var sequence: []const u8 = "";
 
-    std.debug.print("slice_len: {d}\n", .{slice_len});
-
     while (index < id.len) : (index += slice_len) {
         // go from index to index+slice_len and check if that sequence
         // of chars is the same. If undefined, that means the sequence hasn't been set yet.
         const next = id[index .. index + slice_len];
-        std.debug.print("sequence: {s}\tnext: {s}\t index: {d}\n", .{ sequence, next, index });
         if (!std.mem.eql(u8, "", sequence)) {
             if (!std.mem.eql(u8, sequence, next)) {
-                std.debug.print("Found sequence that doesn't match, returning true.\n", .{});
                 return true;
             }
         } else {
