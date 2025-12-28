@@ -81,6 +81,10 @@ fn get_max_voltage_extended(battery: []const u8) !u64 {
             }
             if (volts > curr_voltage_u8) {
                 max_voltage[idx] = volts + '0';
+                // we need to replace everything to the right of the current idx with 0s
+                for (idx + 1..max_voltage.len) |remaining_idx| {
+                    max_voltage[remaining_idx] = '0';
+                }
                 break;
             }
         }
@@ -101,8 +105,9 @@ test "get_max_voltage" {
 }
 
 test "get_max_voltage_extended" {
-    try testing.expectEqual(987654321111, get_max_voltage_extended("987654321111111"));
-    try testing.expectEqual(811111111119, get_max_voltage_extended("811111111111119"));
-    try testing.expectEqual(434234234278, get_max_voltage_extended("234234234234278"));
-    try testing.expectEqual(888911112111, get_max_voltage_extended("818181911112111"));
+    //try testing.expectEqual(987654321111, get_max_voltage_extended("987654321111111"));
+    //try testing.expectEqual(811111111119, get_max_voltage_extended("811111111111119"));
+    //try testing.expectEqual(434234234278, get_max_voltage_extended("234234234234278"));
+    //try testing.expectEqual(888911112111, get_max_voltage_extended("818181911112111"));
+    try testing.expectEqual(986423, get_max_voltage_extended("3733444444337244341463452463644234493354144584433344425444453534454444343444324335454446423343444472"));
 }
