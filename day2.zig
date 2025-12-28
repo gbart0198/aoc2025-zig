@@ -35,7 +35,6 @@ pub fn main() !void {
                 const str = try std.fmt.bufPrint(&buf, "{d}", .{num});
                 const valid = validate_part_2(str);
                 if (!valid) {
-                    std.debug.print("Found invalid number: {d}\n", .{num});
                     sum += num;
                 }
                 _ = try cache.put(num, valid);
