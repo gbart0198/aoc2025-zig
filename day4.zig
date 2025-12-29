@@ -22,7 +22,10 @@ pub fn main() !void {
     var roll_removed = true;
     var line_length: usize = 0;
 
+    var num_loops: u64 = 0;
+
     while (roll_removed) {
+        num_loops += 1;
         roll_removed = false;
         index = 0;
         above = null;
@@ -65,7 +68,8 @@ pub fn main() !void {
                 }
             }
         } else {
-            for (inaccessible_rolls, 0..) |roll, roll_idx| {
+            var write_idx: usize = 0;
+            for (inaccessible_rolls[0..inaccessible_idx]) |roll| {
                 if (roll == -1 or roll == 0) continue;
                 const row_bounds = extract_row_bounds(&data_slice, @intCast(roll), line_length);
                 const idx_in_row = @as(usize, @intCast(roll)) - row_bounds.row_start;
@@ -76,13 +80,17 @@ pub fn main() !void {
                     roll_removed = true;
                     data_slice[@intCast(roll)] = '.';
                     sum += 1;
-                    inaccessible_rolls[roll_idx] = -1;
+                } else {
+                    inaccessible_rolls[write_idx] = roll;
+                    write_idx += 1;
                 }
             }
+            inaccessible_idx = write_idx;
         }
     }
 
     std.debug.print("Final sum: {d}\n", .{sum});
+    std.debug.print("num loops: {d}\n", .{num_loops});
 }
 
 // row: the row that the roll in question exists on.
