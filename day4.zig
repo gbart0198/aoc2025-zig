@@ -3,6 +3,7 @@ const testing = std.testing;
 const data = @embedFile("day4.txt");
 
 const MyError = error{InvalidIndex};
+var check_counter: u64 = 0;
 
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -23,6 +24,8 @@ pub fn main() !void {
     var line_length: usize = 0;
 
     var num_loops: u64 = 0;
+    var num_inners: u64 = 0;
+    const start = try std.time.Instant.now();
 
     while (roll_removed) {
         num_loops += 1;
@@ -48,6 +51,7 @@ pub fn main() !void {
                     }
 
                     for (0..row.len) |row_idx| {
+                        num_inners += 1;
                         if (row[row_idx] == '@') {
                             if (inaccessible_idx >= inaccessible_rolls.len) {
                                 inaccessible_rolls = try allocator.realloc(inaccessible_rolls, inaccessible_rolls.len + arr_step_size);
@@ -70,6 +74,7 @@ pub fn main() !void {
         } else {
             var write_idx: usize = 0;
             for (inaccessible_rolls[0..inaccessible_idx]) |roll| {
+                num_inners += 1;
                 if (roll == -1 or roll == 0) continue;
                 const row_bounds = extract_row_bounds(&data_slice, @intCast(roll), line_length);
                 const idx_in_row = @as(usize, @intCast(roll)) - row_bounds.row_start;
@@ -84,18 +89,26 @@ pub fn main() !void {
                     inaccessible_rolls[write_idx] = roll;
                     write_idx += 1;
                 }
+                num_inners += 1;
             }
             inaccessible_idx = write_idx;
         }
     }
 
+    const end = try std.time.Instant.now();
+    const elapsed = end.since(start);
+
+    std.debug.print("num inners: {d}\n", .{num_inners});
     std.debug.print("Final sum: {d}\n", .{sum});
     std.debug.print("num loops: {d}\n", .{num_loops});
+    std.debug.print("check counter: {d}\n", .{check_counter});
+    std.debug.print("elapsed: {d}\n", .{elapsed});
 }
 
 // row: the row that the roll in question exists on.
 // idx: the index of the roll.
 fn is_paper_accessible(row: []const u8, roll_idx: usize, above: ?[]const u8, below: ?[]const u8) MyError!bool {
+    check_counter += 1;
     if (roll_idx > row.len - 1) {
         return MyError.InvalidIndex;
     }
