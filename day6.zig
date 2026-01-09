@@ -29,25 +29,54 @@ pub fn main() !void {
     }
 
     var sum: i64 = 0;
-    for (0..outer.len - 1) |outer_idx| {
-        const arr = outer[outer_idx];
-        const op = arr[arr.len - 1];
-        var total: i64 = try std.fmt.parseInt(i64, arr[0], 10);
-        for (1..arr.len - 1) |idx| {
-            const next: i64 = try std.fmt.parseInt(i64, arr[idx], 10);
-            std.debug.print("Total: {d}, next: {d}, op: {s}\n", .{ total, next, op });
-            if (std.mem.eql(u8, op, "+")) {
-                total += next;
-            } else if (std.mem.eql(u8, op, "-")) {
-                total -= next;
-            } else if (std.mem.eql(u8, op, "*")) {
-                println
-                total *= next;
-            } else if (std.mem.eql(u8, op, "/")) {
-                total = @divExact(total, next);
+
+    for (0..j_idx) |j| {
+        //const op = outer[i_idx - 1][j];
+        var total: i64 = try std.fmt.parseInt(i64, outer[0][j], 10);
+        var len: usize = outer[0][j].len;
+        // go through and get max length;
+        for (1..i_idx - 1) |i| {
+            const part = outer[i][j];
+            if (part.len > len) len = part.len;
+            total = 0;
+        }
+
+        const num_lengths = len;
+
+        while (len > 0) : (len -= 1) {
+            //for each len, build the number the corresponds to the digit in that place
+            //for each number in the vertical list. if a number isn't as long as len, that means
+            //that the number doesn't have anything in that place, so skip it for this length.
+            var num = try allocator.alloc(u8, num_lengths);
+
+            var i = i_idx - 2;
+            while (i >= 0) {
+                //get the part
+                const part = outer[i][j];
+                // check its length
+                if ((part.len) < len) {
+                    if (i == 0) {
+                        break;
+                    } else {
+                        i -= 1;
+                    }
+                    continue;
+                }
+                // get its digit at len
+                const digit = part[len - 1];
+                num[i] = digit;
+                if (i == 0) {
+                    break;
+                } else {
+                    i -= 1;
+                }
             }
+
+            std.debug.print("num: {s}\n", .{num});
         }
         sum += total;
+        std.debug.print("\n\n", .{});
     }
-    std.debug.print("Sum: {d}\n", .{sum});
+
+    std.debug.print("sum: {d}\n", .{sum});
 }
